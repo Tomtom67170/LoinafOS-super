@@ -1,0 +1,5 @@
+.briefcase
+.ropeproject
+logs
+loinafsuper.dist-info/
+__pycache__/
