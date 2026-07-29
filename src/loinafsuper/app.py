@@ -7,6 +7,7 @@ from toga.style.pack import COLUMN, ROW, CENTER
 from toga.style import Pack
 from loinafsuper.keymaps import Keymaps
 from loinafsuper.wallpaper import Wallpaper
+from loinafsuper.monitors import Monitors
 
 
 class LoinafOSPanel(toga.App):
@@ -24,13 +25,14 @@ class LoinafOSPanel(toga.App):
 
         keys_inst = Keymaps(self.main_window)
         wall_inst = Wallpaper(self.main_window)
+        mon_inst = Monitors(self.main_window)
 
         title = toga.Label(text="LoinafOS\nConfiguration", style=Pack(font_size=36, text_align=CENTER))
 
         keymap = toga.Button(text="Raccourcis clavier", style=Pack(text_align=CENTER, font_size=16, margin=10), on_press=keys_inst.draw)
         wallpaper = toga.Button(text="Fond d'écran", style=Pack(text_align=CENTER, font_size=16, margin=10), on_press=wall_inst.draw)
-        keyboard = toga.Button(text="Langue et saisie", style=Pack(text_align=CENTER, font_size=16, margin=10))
-        screens = toga.Button(text="Écrans", style=Pack(text_align=CENTER, font_size=16, margin=10))
+        #keyboard = toga.Button(text="Langue et saisie", style=Pack(text_align=CENTER, font_size=16, margin=10))
+        screens = toga.Button(text="Écrans", style=Pack(text_align=CENTER, font_size=16, margin=10), on_press=mon_inst.draw)
         startup = toga.Button(text="Applications au démarrage", style=Pack(text_align=CENTER, font_size=16, margin=10))
 
         separator = toga.Divider(style=Pack(margin=20))
@@ -38,7 +40,7 @@ class LoinafOSPanel(toga.App):
         update = toga.Button(text="LoinafOS Update", style=Pack(text_align=CENTER, font_size=16, background_color="#d380ff", margin=10))
         remove = toga.Button(text="Désinstaller LoinafOS", style=Pack(text_align=CENTER, font_size=16, background_color="#c90000", margin=10))
 
-        main_box.add(title, keymap, wallpaper, keyboard, screens, startup, separator, update, remove)
+        main_box.add(title, keymap, wallpaper, screens, startup, separator, update, remove)
 
         self.main_window.show()
 
