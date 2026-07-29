@@ -445,7 +445,7 @@ class Monitors:
                     fichier.write("\tmirror = nil,\n")
                 else:
                     fichier.write("\tmirror = \""+str(setting["mirror"])+"\",\n")
-                fichier.write("\tbitdepht = "+str(setting["bitdepht"])+",\n")
+                fichier.write("\tbitdepth = "+convert_bool(setting["bitdepht"])+",\n")
                 fichier.write("\tcm = \""+str(setting["cm"])+"\",\n")
                 fichier.write("\tsdr_eotf = \""+str(setting["sdr_eotf"])+"\",\n")
                 fichier.write("\tsdrbrightness = "+str(setting["sdrbrightness"])+",\n")
