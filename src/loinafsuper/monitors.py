@@ -1,8 +1,8 @@
-import toga, subprocess, json
+import toga, subprocess, json, os
 
 from toga.style.pack import CENTER
 from toga.style import Pack
-from decimal import Decimal
+#from decimal import Decimal
 
 from pathlib import Path
 
@@ -61,6 +61,13 @@ def check_hdr_int(s:str):
     except ValueError:
         return "Nombre entier invalide"
 
+def run_command(cmd:list):
+    if os.path.exists("/.flatpak-info"):
+        cmd = ["flatpak-spawn", "--host"] + cmd
+    else: print("!!! ENVIRONNEMENT FLATPAK NON DÉTÉCTÉ !!!")
+
+    return subprocess.run(cmd, capture_output=True)
+
 
 class Monitors:
     def __init__(self, main_window):
@@ -72,27 +79,12 @@ class Monitors:
 
         self.main_box = toga.Column(style=Pack(align_items=CENTER, margin=5))
 
-        out = subprocess.run(
-            ["hyprctl", "monitors"],
-            capture_output=True
-        )
+        out = run_command(["hyprctl", "monitors", "-j"])
 
-        rst = out.stdout.decode('utf-8').replace("\n\n\n", "").split("\n\n")
-
+        #print(out)#.stdout.decode('utf-8'))
+        rst = json.loads(out.stdout.decode('utf-8'))
         for m in rst:
-            t = m.split(" ")
-            #self.monitors[t[1]] = []
-            s = m.split("\n")
-            tmp = ["", "", None]
-            for line in s:
-                desc = line.split(":")
-                if "description" in desc[0]:
-                    tmp[0] = desc[1] + " ("+t[1]+")"
-                    tmp[1] = desc[1]
-                if "availableModes" in desc[0]:
-                    tmp[2] = desc[1].split(" ")[1:-1]
-                    self.monitors.append(tmp)
-                    break
+            self.monitors.append([m["description"] + " ("+m["name"]+")", m["description"], m["availableModes"]])
 
         try:
             with open(Path("~/.config/hypr/settings/mon.json").expanduser(), "r") as fichier:
@@ -119,6 +111,9 @@ class Monitors:
         data = []
         for x in self.monitors:
             data.append(x[0])
+
+        for screen in self.settings:
+            if screen not in data: data.append(screen+" (Inactif)")
         self.screen_select = toga.Table(style=Pack(font_size=16, text_align=CENTER), data=data, multiple_select=False, show_headings=True, on_select=self.select_spec, columns=["Écran"], headings=None)
 
         self.spec_box = toga.Column(style=Pack(align_items=CENTER))
@@ -127,17 +122,17 @@ class Monitors:
 
     def select_spec(self, widget:toga.Table):
 
-        children = self.spec_box.children
-        for child in children:
-            self.spec_box.remove(child)
+        self.main_box.remove(self.spec_box)
 
-        self.monitor = widget.selection.écran
+        self.spec_box = toga.Column(style=Pack(align_items=CENTER))
+
+        self.monitor = widget.selection.écran.replace(" (Inactif)", "")
 
         try:
             setting = self.settings[self.monitor]
         except KeyError:
             setting = self.settings[self.monitor] = {
-                "desc": "",
+                "desc": mon[1],
                 "mode": "preferred",
                 "position": [True, 0],
                 "scale": 1.0,
@@ -165,10 +160,10 @@ class Monitors:
 
         res_box = toga.Row(style=Pack(margin=5, justify_content=CENTER, align_items=CENTER))
         res_text = toga.Label("Résolution", style=Pack(font_size=16, text_align=CENTER))
+        res_data = []
         for mon in self.monitors:
             if mon[0] == self.monitor:
                 res_data = mon[2]
-                setting["desc"] = mon[1]
         try:
             res_select = toga.Selection(style=Pack(font_size=16), items=["Meilleure résolution et taux de rafraichissement", "Plus haute résolution", "Plus haut taux de rafraichissement", "Plus grande largeur"] + res_data, value=convert_hypr_label(setting["mode"]), on_change=self.change_res)
         except ValueError:
@@ -244,7 +239,7 @@ class Monitors:
         sdrbright_box = toga.Row(style=Pack(margin=5, align_items=CENTER, justify_content=CENTER))
         sdrbright_text = toga.Label("Luminosité sur les éléments SDR (écran HDR uniquement)", style=Pack(text_align=CENTER, font_size=16))
         sdrbright_select = toga.TextInput(style=Pack(font_size=16), value=setting["sdrbrightness"], on_change=self.change_sdrbright, validators=[check_sdr])
-        print(sdrbright_select.value)
+        #print(sdrbright_select.value)
         sdrbright_box.add(sdrbright_text, sdrbright_select)
 
         sdrsat_box = toga.Row(style=Pack(margin=5, align_items=CENTER, justify_content=CENTER))
@@ -303,6 +298,9 @@ class Monitors:
         self.advanced_box.add(bitdepht_switch, cm_box, eotf_box, sdrbright_box, sdrsat_box, vrr_box, icc_box, area_box, wide_box, hdr_box, sdrlum_box, hdrlum_box, avglum_box)
 
         self.spec_box.add(apply_button, res_box, pos_title, pos_box, scale_box, disable_switch, transform_box, mirror_box, more_setting)
+
+        self.main_box.add(self.spec_box)
+        self.main_box.refresh()
 
     def change_res(self, widget):
         setting = self.settings[self.monitor]
@@ -444,7 +442,7 @@ class Monitors:
                 if setting["mirror"] == None:
                     fichier.write("\tmirror = nil,\n")
                 else:
-                    fichier.write("\tmirror = \""+str(setting["mirror"])+"\",\n")
+                    fichier.write("\tmirror = \""+str("desc:"+setting["mirror"])+"\",\n")
                 fichier.write("\tbitdepth = "+convert_bool(setting["bitdepht"])+",\n")
                 fichier.write("\tcm = \""+str(setting["cm"])+"\",\n")
                 fichier.write("\tsdr_eotf = \""+str(setting["sdr_eotf"])+"\",\n")

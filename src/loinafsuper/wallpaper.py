@@ -10,6 +10,14 @@ def convert_bool(value) -> str:
     if value == True: return "true"
     else: return "false"
 
+def run_command(cmd:list):
+    if os.path.exists("/.flatpak-info"):
+        cmd = ["flatpak-spawn", "--host"] + cmd
+    else: print("!!! ENVIRONNEMENT FLATPAK NON DÉTÉCTÉ !!!")
+
+    return subprocess.run(cmd, capture_output=True)
+
+
 class Wallpaper:
     def __init__(self, main_window):
 
@@ -97,16 +105,14 @@ class Wallpaper:
             #On commence par chercher les différents écrans
             mnames = []
 
-            out = subprocess.run(
-                ["hyprctl", "monitors"],
-                capture_output=True
-            )
+            out = run_command(["hyprctl", "monitors", "-j"])
 
-            rst = out.stdout.decode('utf-8').replace("\n\n\n", "").split("\n\n")
+            #print(out)
+
+            rst = json.loads(out.stdout.decode('utf-8'))
 
             for m in rst:
-                t = m.split(" ")
-                mnames.append(t[1])
+                mnames.append(m["name"])
 
             spec_title = toga.Label("Configuration par écran", style=Pack(text_align=CENTER, font_size=26, margin=5))
 

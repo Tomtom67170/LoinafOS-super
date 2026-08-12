@@ -35,11 +35,11 @@ requires = [
 
 [tool.briefcase.app.loinafsuper.linux]
 requires = [
-    "toga-gtk==0.5.3",
+    "toga-gtk==0.5.6",
     # PyGObject 3.52.1 enforces a requirement on libgirepository-2.0-dev. This library
     # isn't available on Debian 12/Ubuntu 22.04. If you don't need to support those (or
     # older) releases, you can remove this version pin. See beeware/toga#3143.
-    "pygobject < 3.52.1",
+    "pygobject",# < 3.52.1",
 ]
 
 [tool.briefcase.app.loinafsuper.linux.system.debian]
@@ -134,20 +134,15 @@ system_runtime_requires = [
 ]
 
 [tool.briefcase.app.loinafsuper.linux.appimage]
-manylinux = "manylinux_2_28"
+manylinux = "manylinux_2_34"
 
 system_requires = [
-    # Needed to compile pycairo wheel
     "cairo-gobject-devel",
-    # Needed to compile PyGObject wheel
     "gobject-introspection-devel",
-    # Needed to provide GTK
     "gtk3-devel",
-    # Dependencies that GTK looks for at runtime, that need to be
-    # in the build environment to be picked up by linuxdeploy
     "libcanberra-gtk3",
     "PackageKit-gtk3-module",
-    "gvfs-client",
+    "gvfs-client"
 ]
 
 linuxdeploy_plugins = [
@@ -158,6 +153,19 @@ linuxdeploy_plugins = [
 flatpak_runtime = "org.gnome.Platform"
 flatpak_runtime_version = "48"
 flatpak_sdk = "org.gnome.Sdk"
+env = { "LC_ALL" = "C.UTF-8" }
+finish_args = [
+    # Permet de lire/écrire dans ~/.config/hypr
+    "--filesystem=~/.config/hypr:ro",
+    # Permet de communiquer avec le serveur Wayland / Hyprland
+    "--socket=wayland",
+    "--socket=session-bus",
+    # Permet d'exécuter des commandes de l'hôte (hyprctl) via flatpak-spawn
+    # Majuscule obligatoire sur Flatpak !
+    "--talk-name=org.freedesktop.Flatpak",
+    # Portail d'exécution hôte
+    "--talk-name=org.freedesktop.portal.Flatpak",
+]
 
 [tool.briefcase.app.loinafsuper.windows]
 requires = [

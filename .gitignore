@@ -3,3 +3,5 @@
 logs
 loinafsuper.dist-info/
 __pycache__/
+build
+dist
